@@ -2,7 +2,7 @@
 
 ## Project Description
 
-SCC Technovision Inc.'s collaborative task management platform focused on enhancing and improving task management. The platform is built using React.js for the frontend, Express and Node.js for the backend, and MongoDB for the database. Firebase is used for user authentication.
+SCC Technovision Inc.'s collaborative task management platform focused on enhancing and improving task management. The platform is built using React.js for the Front end, Express and Node.js for the backend, and MongoDB for the database. Firebase is used for user authentication.
 
 ## Objective
 
