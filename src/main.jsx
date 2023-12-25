@@ -8,6 +8,9 @@ import Dashboard from "./Components/Dashboard/Dashboard";
 import UserLogin from "./Components/UserManagment/UserLogin/UserLogin";
 import AuthProvider from "./Provider/AuthProvider";
 import PrivateRoute from "./PrivateRoute";
+import UserRegister from "./Components/UserManagment/UserRegister/UserRegister";
+import About from "./Components/About/About";
+import Contact from "./Components/Contact/Contact";
 const router = createBrowserRouter([
   {
     path: "/",
@@ -20,11 +23,11 @@ const router = createBrowserRouter([
       },
       {
         path: "/about",
-        element: <div>About</div>,
+        element: <About></About>,
       },
       {
         path: "/contact",
-        element: <div>Contact</div>,
+        element: <Contact></Contact>,
       },
       {
         path: "/dashboard",
@@ -37,6 +40,10 @@ const router = createBrowserRouter([
       {
         path: "/login",
         element: <UserLogin></UserLogin>,
+      },
+      {
+        path: "/register",
+        element: <UserRegister></UserRegister>,
       },
     ],
   },

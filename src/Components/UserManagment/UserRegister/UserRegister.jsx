@@ -1,20 +1,22 @@
-import { faEnvelope } from "@fortawesome/free-regular-svg-icons";
-import { faLock } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useContext, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import API_ROOT from "../../../../config";
 import { AuthContext } from "../../../Provider/AuthProvider";
+import { Link, useNavigate } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
-const UserLogin = () => {
+import {
+  faEnvelope,
+  faImage,
+  faLock,
+  faUserTie,
+} from "@fortawesome/free-solid-svg-icons";
+import { axiosPublic } from "../../../axiosPublic";
+
+const UserRegister = () => {
+  const { createUser, user } = useContext(AuthContext);
+  const [passwordError, setPasswordError] = useState("");
   const navigate = useNavigate();
-  const { googleLogIn, user, githubLogin } = useContext(AuthContext);
-  const [loginError, setLoginError] = useState(false);
-
-  const handleLogin = () => {
-    console.log("handle login");
-  };
-
+  const { googleLogIn } = useContext(AuthContext);
+  const [loginError, setLoginError] = useState(null);
   if (user) {
     navigate("/");
   }
@@ -28,51 +30,73 @@ const UserLogin = () => {
         const userEmail = user.email;
         const userName = user.displayName;
         const userPhotoUrl = user.photoURL;
-
         const newUser = { userEmail, userName, userPhotoUrl, userCart: [] };
 
-        fetch(`${API_ROOT}/addNewUser`, {
-          method: "POST",
-          headers: {
-            "content-type": "application/json",
-          },
-          body: JSON.stringify(newUser),
-        })
-          .then((res) => res.json())
-          .then((data) => {
-            console.log(data);
-          });
+        axiosPublic
+          .post(`/addNewUser`, newUser)
+          .then((data) => console.log(data.data));
 
         console.log("Login successful");
         navigate(location?.state ? location.state : "/");
       })
-      .catch((error) => {
-        setLoginError(`Invalid Email/Password. Please Enter Correctly. `);
-        console.log(error.message);
-      });
+      .catch((error) =>
+        setLoginError(
+          `Invalid Email/Password. Please Enter Correctly. ${error.message}`
+        )
+      );
   };
 
-  const handleGitHubLogin = async () => {
-    setLoginError(null);
-    githubLogin()
+  const handleRegister = (e) => {
+    e.preventDefault();
+    const form = new FormData(e.currentTarget);
+    const userEmail = form.get("email").toLocaleLowerCase();
+    const userName = form.get("name");
+    const userPhotoUrl = form.get("photoUrl");
+    const userPassword = form.get("password");
+    const newUser = { userEmail, userName, userPhotoUrl, userCart: [] };
+
+    if (userPassword.length < 6) {
+      setPasswordError("Password must be at least 6 characters long");
+      return;
+    }
+
+    if (!/[A-Z]/.test(userPassword)) {
+      setPasswordError("Password must contain at least one capital letter");
+      return;
+    }
+
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(userPassword)) {
+      setPasswordError("Password must contain at least one special character");
+      return;
+    }
+
+    setPasswordError("");
+
+    createUser(userEmail, userPassword)
       .then((userCredential) => {
         const user = userCredential.user;
         console.log(user);
+        axiosPublic
+          .post("/addNewUser", newUser)
+          .then((res) => console.log(res.data));
 
-        console.log("Login successful");
         navigate(location?.state ? location.state : "/");
       })
       .catch((error) => {
-        setLoginError(`Invalid Email/Password. Please Enter Correctly. `);
-        console.log(error.message);
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        console.log(errorCode, errorMessage);
       });
   };
+
   return (
     <div>
       <section>
         <div className="py-4">
           <div className="mx-auto max-w-xl bg-[#f2f2f7] px-5 py-12 text-center md:px-10">
-            <h2 className="text-3xl font-bold mb-4 md:text-5xl">Login Now</h2>
+            <h2 className="text-3xl font-bold mb-4 md:text-5xl">
+              Register Now
+            </h2>
 
             <button
               onClick={handleGoogleSignIn}
@@ -85,13 +109,6 @@ const UserLogin = () => {
                 className="mr-4"
               />
               <p className="font-bold">Sign up with Google</p>
-            </button>
-            <button
-              onClick={handleGitHubLogin}
-              href="#"
-              className="mx-auto flex max-w-sm justify-center bg-gray-600 px-8 py-4 text-center font-semibold text-white transition [box-shadow:rgb(171,_196,_245)_-8px_8px] hover:[box-shadow:rgb(171,_196,_245)_0px_0px] w-full"
-            >
-              <p className="font-bold">Sign up with GitHub</p>
             </button>
             <div className="mx-auto mb-8 mt-8 flex max-w-sm justify-around">
               <img
@@ -108,15 +125,29 @@ const UserLogin = () => {
             </div>
             {loginError && (
               <div className="form-control mb-4">
-                <p className="text-lg text-red-500">{loginError}</p>
+                <p className="text-lg text-error">{loginError}</p>
               </div>
             )}
             <form
-              onSubmit={handleLogin}
+              onSubmit={handleRegister}
               className="mx-auto mb-4 max-w-sm pb-4"
               name="wf-form-password"
               method="get"
             >
+              <div className="relative">
+                <FontAwesomeIcon
+                  className="absolute bottom-0 left-[5%] right-auto top-[26%] inline-block"
+                  icon={faUserTie}
+                />
+                <input
+                  type="text"
+                  className="mb-4 block h-9 w-full border border-black bg-white px-3 py-6 pl-14 text-sm text-[#333333]"
+                  maxLength="256"
+                  name="name"
+                  placeholder="Full Name"
+                  required=""
+                />
+              </div>
               <div className="relative">
                 <FontAwesomeIcon
                   className="absolute bottom-0 left-[5%] right-auto top-[26%] inline-block"
@@ -131,7 +162,19 @@ const UserLogin = () => {
                   required=""
                 />
               </div>
-
+              <div className="relative mb-4 pb-2">
+                <FontAwesomeIcon
+                  className="absolute bottom-0 left-[5%] right-auto top-[26%] inline-block"
+                  icon={faImage}
+                />
+                <input
+                  type="url"
+                  className="block h-9 w-full text-[#333333] border border-black bg-white px-3 py-6 pl-14 text-sm "
+                  placeholder="Profile Picture Url"
+                  name="photoUrl"
+                  required=""
+                />
+              </div>
               <div className="relative mb-4 pb-2">
                 <FontAwesomeIcon
                   className="absolute bottom-0 left-[5%] right-auto top-[26%] inline-block"
@@ -139,11 +182,16 @@ const UserLogin = () => {
                 />
                 <input
                   type="password"
-                  className="mb-4 block h-9 w-full border border-black bg-white px-3 py-6 pl-14 text-sm text-[#333333]"
+                  className={`mb-4 block h-9 w-full border border-black bg-white px-3 py-6 pl-14 text-sm text-[#333333] ${
+                    passwordError ? "border-red-500" : ""
+                  } `}
                   name="password"
-                  placeholder="Password "
+                  placeholder="Password (min 6 characters)"
                   required=""
                 />
+                {passwordError && (
+                  <p className="text-red-500 text-sm">{passwordError}</p>
+                )}
               </div>
 
               <button
@@ -151,7 +199,7 @@ const UserLogin = () => {
                 href="#"
                 className="flex max-w-full grid-cols-2 flex-row items-center justify-center bg-[#276ef1] px-8 py-4 text-center font-semibold text-white transition [box-shadow:rgb(171,_196,_245)_-8px_8px] hover:[box-shadow:rgb(171,_196,_245)_0px_0px] w-full"
               >
-                <p className="mr-6 font-bold">Login To FlashTech</p>
+                <p className="mr-6 font-bold">Join FlashTech</p>
                 <div className="h-4 w-4 flex-none">
                   <svg
                     fill="currentColor"
@@ -165,12 +213,13 @@ const UserLogin = () => {
               </button>
             </form>
             <p className=" text-[#636262]">
-              Do not have an account?{" "}
+              Already have an account?{" "}
               <Link
-                to={"/register"}
+                to={"/login"}
+                href="#"
                 className="font-[Montserrat,_sans-serif] text-sm font-bold text-black"
               >
-                Register Now
+                Login now
               </Link>
             </p>
           </div>
@@ -180,4 +229,4 @@ const UserLogin = () => {
   );
 };
 
-export default UserLogin;
+export default UserRegister;

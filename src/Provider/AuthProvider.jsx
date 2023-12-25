@@ -1,6 +1,7 @@
 /* eslint-disable react/prop-types */
 import { createContext, useEffect, useState } from "react";
 import {
+  GithubAuthProvider,
   GoogleAuthProvider,
   createUserWithEmailAndPassword,
   onAuthStateChanged,
@@ -14,6 +15,7 @@ const AuthProvider = ({ children }) => {
   const [userLoading, setUserLoading] = useState(true);
   const [user, setUser] = useState(null);
   const googleAuthProvider = new GoogleAuthProvider();
+  const githubAuthProvider = new GithubAuthProvider();
   const googleLogIn = async () => {
     console.log("auth in authprovider");
     setUserLoading(true);
@@ -27,7 +29,20 @@ const AuthProvider = ({ children }) => {
     }
   };
 
-  const registerUser = async (userEmail, userPass) => {
+  const githubLogin = async () => {
+    console.log("github auth login");
+    setUserLoading(true);
+    try {
+      const response = await signInWithPopup(auth, githubAuthProvider);
+      return response;
+    } catch (error) {
+      console.error(false);
+    } finally {
+      setUserLoading(false);
+    }
+  };
+
+  const createUser = async (userEmail, userPass) => {
     setUserLoading(true);
     try {
       const result = await createUserWithEmailAndPassword(
@@ -41,19 +56,19 @@ const AuthProvider = ({ children }) => {
       console.log(error.message);
     }
   };
-    const userLogOut = () => {
-      setUserLoading(true);
-      signOut(auth)
-        .then(() => {
-          console.log("logged Out")
-        })
-        .catch((error) => {
-          console.log(error.message);
-        })
-        .finally(() => {
-          setUserLoading(false);
-        });
-    };
+  const userLogOut = () => {
+    setUserLoading(true);
+    signOut(auth)
+      .then(() => {
+        console.log("logged Out");
+      })
+      .catch((error) => {
+        console.log(error.message);
+      })
+      .finally(() => {
+        setUserLoading(false);
+      });
+  };
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -70,8 +85,9 @@ const AuthProvider = ({ children }) => {
         userLoading,
         user,
         googleLogIn,
-        registerUser,
+        createUser,
         userLogOut,
+        githubLogin,
       }}
     >
       {children}
